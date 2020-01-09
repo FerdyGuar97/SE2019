@@ -1,13 +1,14 @@
 package com.gdx.game.entities;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.gdx.game.player_classes.CharacterClass;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -15,78 +16,44 @@ import com.badlogic.gdx.utils.Disposable;
 import com.gdx.game.GameStage;
 import com.gdx.game.GdxGame;
 
-/**
- * DIVIDI L'ENTITY BODY IN 2 BODY, UN COLLIDING BODY CHE SI OCCUPA DEL LATO
- * FISICO, ED UN SENSOR BODY CHE SI OCCUPA DEL LATO DI GESTIONE DELLE
- * COLLISIONI, VEDI DI FARLI LAVORARE INSIEME. UTILIZZA TRASFORM SUL SENSORE,
- * NON SUL CORPO DINAMICO!
- *
- * @author Armando
- */
-public abstract class Entity extends Actor implements Disposable {
+public class Entity extends Actor implements Disposable {
 
-    protected World world;
-    protected CharacterClass characterClass;
-    public Body body;
-    protected TextureRegion textureRegion;
-    protected Action defaultAction;
+    private Body body;
+    private final EntityDef entityDef;
+    private TextureRegion textureRegion;
+    protected final Action defaultAction;
 
-    public Entity(float worldWidth, float worldHeight, Vector2 initialPosition) {
-        setWidth(worldWidth);
-        setHeight(worldHeight);
-        setPosition(initialPosition.x, initialPosition.y);
+    public Entity(Action defaultAction, EntityDef entityDef) {
+        if(entityDef == null) throw new IllegalArgumentException("entityDef must be non-null.");
+        this.entityDef = entityDef;
+        
+        if(defaultAction == null)
+            this.defaultAction = new PlayAnimation(entityDef.getAnimations().get("default"));
+        else
+            this.defaultAction = defaultAction;
     }
 
     @Override
-    public void draw(Batch batch, float parentAlpha) { //Draw dice al batch cosa deve disegnare. Lo stage ogni volta che fai stage.draw chiama tutti i draw degli actors passandogli il batch in modo che possono contribire al batch e disegna tutto insieme
-        batch.draw(textureRegion, getPosition().x - getWidth() / 2, getPosition().y - getWidth() / 2, getWidth(), getHeight());
+    protected void rotationChanged() {
+        super.rotationChanged(); //ToDo
     }
 
-    protected abstract void initPhysics();
-
-    protected abstract void initGraphics();
-
-    // -------------- Physics:Velocity
-    protected void setLinearVelocity(Vector2 velocity) {
-        body.setLinearVelocity(velocity);
+    @Override
+    protected void sizeChanged() {
+        super.sizeChanged(); //ToDo
     }
 
-    protected void setLinearVelocity(float x, float y) {
-        body.setLinearVelocity(x, y);
-    }
-
-    protected Vector2 getLinearVelocity() {
-        return body.getLinearVelocity();
-    }
-
-    /**
-     * Returns the actual entity position.
-     *
-     * @return the actual entity position
-     */
-    public Vector2 getPosition() {
-        return new Vector2(getX(), getY());
-    }
-
-    public void setPosition(Vector2 pos) {
-        if (body != null) {
-            body.setTransform(pos, 0);
-        }
-        setPosition(pos.x, pos.y);
-    }
-
-    public World getWorld() {
-        return world;
+    @Override
+    protected void positionChanged() {
+        super.positionChanged(); //ToDo
     }
 
     @Override
     protected void setStage(Stage stage) {
-        super.setStage(stage);
         if (stage instanceof GameStage) {
-            GameStage s = (GameStage) stage;
-            world = s.getWorld();
+            super.setStage(stage);
         } else {
-            world = null;
+            throw new IllegalArgumentException("An Entity can only be assigned to a GameStage");
         }
     }
 
@@ -97,9 +64,42 @@ public abstract class Entity extends Actor implements Disposable {
             body = null;
         } else {
             clear();
+            addAction(new PhysicsLoading());
             addAction(defaultAction);
             super.setParent(parent);
         }
+    }
+
+    public GameStage getGameStage() {
+        return (GameStage) getStage();
+    }
+
+    public Body getBody() {
+        return body;
+    }
+
+    protected void setBody(Body b) {
+        body = b;
+    }
+
+    public EntityDef getEntityDef() {
+        return entityDef;
+    }
+
+    public TextureRegion getRegionToDraw() {
+        return textureRegion;
+    }
+
+    public void setRegionToDraw(TextureRegion txtRegion) {
+        this.textureRegion = txtRegion;
+    }
+    
+    public Vector2 getPosition() {
+        return new Vector2(getX(), getY());
+    }
+
+    public void setPosition(Vector2 pos) {
+        setPosition(pos.x, pos.y);
     }
 
     @Override
@@ -112,16 +112,42 @@ public abstract class Entity extends Actor implements Disposable {
         }
     }
 
-    public void setBody(Body b) {
-        body = b;
-    }
-
     @Override
-    public void act(float delta) {
+    public final void act(float delta) {
         if (body != null) {
             super.setPosition(body.getPosition().x, body.getPosition().y);
         }
         super.act(delta);
+    }
+
+    @Override
+    public final void draw(Batch batch, float parentAlpha) {
+        Color color = getColor();
+        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha);
+        batch.draw(textureRegion, getX(), getY(), getOriginX(), getOriginY(),
+                getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation());
+    }
+
+    /**
+     * An entity-specific action which duty is to load all the physics defined
+     * in EntityDef in the World object specified by GameStage.
+     */
+    protected class PhysicsLoading extends GameAction {
+
+        @Override
+        public boolean act(float delta) {
+            if (entityDef == null) {
+                return false;
+            }
+            body = getEntity().getGameStage().getWorld().createBody(entityDef.getBodyDef());
+            body.setUserData(Entity.this);
+
+            for (FixtureDef fixDef : getEntity().getEntityDef().getFixtureDefs().values()) {
+                Fixture fix = body.createFixture(fixDef);
+                fix.setUserData(Entity.this);
+            }
+            return true;
+        }
     }
 
 }

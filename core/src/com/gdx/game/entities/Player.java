@@ -60,7 +60,7 @@ public final class Player extends MortalEntity {
                 characterClass.executeGraphics();
                 body = characterClass.executePhysics(world, getPosition(), getWidth(), getWidth(), Player.this);
             }
-            if (Player.super.life <= 0) {
+            if (Player.super.healthPoints <= 0) {
                 kill();
                 return true;
             }
@@ -146,7 +146,7 @@ public final class Player extends MortalEntity {
     @Override
     public void isHitBy(Bullet bullet) {
         //System.out.println("GGGGG");
-        life -= bullet.getDamage();
+        healthPoints -= bullet.getDamage();
         fire(new HitEvent());
     }
 

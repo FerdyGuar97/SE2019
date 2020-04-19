@@ -45,7 +45,7 @@ public final class LightShieldSkill extends DefenseSkill {
 
             if (getCaster() instanceof Player && LightShieldSkillEntity.getN_instances() < 1) {
 
-                LightShieldSkillEntity clone = new LightShieldSkillEntity(lsse.name, lsse.life, lsse.getHeight(), lsse.getHeight(), getCaster().getPosition(), (Player) getCaster());
+                LightShieldSkillEntity clone = new LightShieldSkillEntity(lsse.name, lsse.healthPoints, lsse.getHeight(), lsse.getHeight(), getCaster().getPosition(), (Player) getCaster());
                 getCaster().getParent().addActor(clone);
                 clone.initPhysics();
                 clone.initGraphics();

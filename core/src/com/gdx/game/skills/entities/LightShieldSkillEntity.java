@@ -37,7 +37,7 @@ public class LightShieldSkillEntity extends MortalEntity {
 
     @Override
     public void isHitBy(Bullet bullet) {
-        life -= bullet.getDamage();
+        healthPoints -= bullet.getDamage();
     }
 
     @Override
@@ -87,7 +87,7 @@ public class LightShieldSkillEntity extends MortalEntity {
 
         @Override
         public boolean act(float delta) {
-            if (LightShieldSkillEntity.super.life <= 0 || caster.getParent() == null) {
+            if (LightShieldSkillEntity.super.healthPoints <= 0 || caster.getParent() == null) {
                 dispose();
                 return true;
             }

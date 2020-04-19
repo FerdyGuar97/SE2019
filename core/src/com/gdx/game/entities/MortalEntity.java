@@ -1,7 +1,7 @@
 package com.gdx.game.entities;
 
 import com.gdx.game.entities.bullets.Bullet;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Action;
 import com.gdx.game.listeners.event.events.DeathEvent;
 
 /**
@@ -11,13 +11,12 @@ import com.gdx.game.listeners.event.events.DeathEvent;
 public abstract class MortalEntity extends Entity {
 
     public String name;
-    public Integer life;
+    public Integer healthPoints;
+    public Stats stats;
 
-    public MortalEntity(String name, Integer life, float width, float height, Vector2 position) {
-        super(width, height, position);
-        this.name = name;
-        setName(name);
-        this.life = life;
+    public MortalEntity(Action defaultAction, EntityDef entityDef, Stats stats) {
+        super(defaultAction, entityDef);
+        this.healthPoints = stats.getBasicHP();
     }
 
     /**
@@ -37,18 +36,7 @@ public abstract class MortalEntity extends Entity {
     }
 
     public Integer getLife() {
-        return life;
+        return healthPoints;
     }
-
-    public float getBoostSpellMultiplier() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public float getDamageSpellMultiplier() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public float getDefenseSpelMultiplier() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+    
 }

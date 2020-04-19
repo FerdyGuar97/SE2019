@@ -93,7 +93,7 @@ public final class DemoBoss extends Boss {
                 initPhysics();
             }
             setPosition(body.getPosition());
-            if (DemoBoss.super.life <= 0) {
+            if (DemoBoss.super.healthPoints <= 0) {
                 kill();
                 return true;
             }
@@ -159,7 +159,7 @@ public final class DemoBoss extends Boss {
 
     @Override
     public void isHitBy(Bullet bullet) {
-        life -= bullet.getDamage();
+        healthPoints -= bullet.getDamage();
         fire(new HitEvent());
     }
 
@@ -179,15 +179,15 @@ public final class DemoBoss extends Boss {
                 Gdx.app.log("User Data ", b.getBody().getUserData().toString());
 
                 if (b.getBody().getUserData() == DemoBoss.this.getUserData()) {
-                    life = life - (int) a.getDensity();
+                    healthPoints = healthPoints - (int) a.getDensity();
                     //or any other way to calculate damage
 
                 } else {
-                    life = life - (int) b.getDensity();
+                    healthPoints = healthPoints - (int) b.getDensity();
                     //or any other way to calculate damage
                 }
 
-                Gdx.app.log("Life", life.toString());
+                Gdx.app.log("Life", healthPoints.toString());
 
             }
 
